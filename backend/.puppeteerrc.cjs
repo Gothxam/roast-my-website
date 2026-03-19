@@ -1,10 +1,13 @@
 const { join } = require('path');
+const os = require('os');
 
 /**
  * @type {import("puppeteer").Configuration}
  */
 module.exports = {
-  // Changes the cache location for Puppeteer to be within the project.
-  // This ensures Render persists the downloaded Chrome binary.
-  cacheDirectory: join(__dirname, '.cache', 'puppeteer'),
+  // Only use project-local cache on Linux (Render/CI)
+  // On Windows (Local Dev), we use the default system cache to avoid errors
+  cacheDirectory: os.platform() === 'win32' 
+    ? join(os.homedir(), '.cache', 'puppeteer')
+    : join(__dirname, '.cache', 'puppeteer'),
 };
