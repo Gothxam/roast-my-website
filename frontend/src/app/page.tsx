@@ -72,18 +72,18 @@ export default function Home() {
             className="w-full max-w-2xl group"
           >
             <div className="relative p-1 rounded-2xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-2xl group-focus-within:border-purple-500/50 transition-all duration-300">
-              <div className="flex bg-black/40 rounded-xl overflow-hidden p-1">
+              <div className="flex flex-col sm:flex-row bg-black/40 rounded-xl overflow-hidden p-2 gap-2">
                 <input
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Paste your URL (e.g. yoursite.com)"
-                  className="flex-1 bg-transparent px-6 py-4 text-lg outline-none placeholder:text-gray-600"
+                  className="flex-1 bg-transparent px-4 sm:px-6 py-4 text-lg outline-none placeholder:text-gray-600 w-full"
                   required
                 />
                 <button
                   type="submit"
-                  className="bg-white text-black px-8 py-4 rounded-xl font-bold flex items-center gap-2 hover:bg-purple-600 hover:text-white transition-all shadow-lg active:scale-95"
+                  className="bg-white text-black px-6 sm:px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-purple-600 hover:text-white transition-all shadow-lg active:scale-95 w-full sm:w-auto"
                 >
                   GET ROASTED <ArrowRight className="w-5 h-5" />
                 </button>
