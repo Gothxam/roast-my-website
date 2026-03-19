@@ -16,35 +16,19 @@ export default function SplineBackground() {
     setIsLoaded(true);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!splineRef.current || !isLoaded) return;
+  // The current Spline scene does not have a "progress" variable configured,
+  // so we remove the scroll listener to prevent console errors and improve performance.
 
-      const scrollTop = window.scrollY;
-      const maxScroll =
-        document.documentElement.scrollHeight - window.innerHeight;
-
-      const progress = scrollTop / maxScroll;
-
-      const p = Math.min(Math.max(progress, 0), 1);
-
-      // cinematic easing
-      const eased = 1 - Math.pow(1 - p, 3);
-
-      splineRef.current.setVariable("progress", eased);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isLoaded]);
 
   return (
-    <div className="fixed inset-0 z-0">
-      <Spline
-        onLoad={onLoad}
-        scene="https://prod.spline.design/5U0KUgj3xBsmfox8/scene.splinecode"
-      />
+    <div className="fixed inset-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vh]">
+        <Spline
+          onLoad={onLoad}
+          scene="https://prod.spline.design/5U0KUgj3xBsmfox8/scene.splinecode"
+          style={{ width: "100%", height: "100%" }}
+        />
+      </div>
     </div>
   );
 }
