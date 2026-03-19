@@ -13,8 +13,17 @@ export const fetchPageMetadata = async (url: string): Promise<PageMetadata> => {
   try {
     browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      defaultViewport: null
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox', 
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-extensions',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-features=IsolateOrigins,site-per-process' // Saves RAM by reducing processes
+      ],
+      defaultViewport: { width: 1280, height: 800 }
     });
 
     const page = await browser.newPage();

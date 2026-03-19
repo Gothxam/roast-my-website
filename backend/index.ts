@@ -37,6 +37,10 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
       return res.status(400).json({ error: `Failed to fetch URL: ${metadata.loadError}` });
     }
 
+    // Give Render a "cooling period" to reclaim RAM from the first Chrome process
+    console.log("Allowing RAM to settle before Lighthouse...");
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     // 2. Run Lighthouse Audit
     console.log(`[2/3] Running Lighthouse audit for ${url}...`);
     const scores = await runLighthouseAudit(url);
