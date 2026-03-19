@@ -1,4 +1,5 @@
 import * as chromeLauncher from 'chrome-launcher';
+import puppeteer from 'puppeteer';
 
 // Use dynamic import for lighthouse since it's typically ESM
 export interface LighthouseScores {
@@ -15,8 +16,13 @@ export const runLighthouseAudit = async (url: string): Promise<LighthouseScores 
     
     // Launch chrome in robust headless mode with a fresh port attempt
     try {
+      // Explicitly tell chrome-launcher to use the Chrome binary downloaded by Puppeteer
+      const customChromePath = puppeteer.executablePath();
+      console.log(`[Lighthouse] Using Chrome path: ${customChromePath}`);
+
       chrome = await chromeLauncher.launch({ 
-        chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--quiet'] 
+        chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--quiet'],
+        chromePath: customChromePath
       });
       
       const options = {

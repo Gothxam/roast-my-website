@@ -75,7 +75,8 @@ function AnalyzeContent() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || "Failed to analyze website");
+          const detailedError = errorData.details ? `${errorData.error}: ${errorData.details}` : (errorData.error || "Failed to analyze website");
+          throw new Error(detailedError);
         }
 
         const data: AnalysisResult = await response.json();

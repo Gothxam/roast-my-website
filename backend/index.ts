@@ -72,24 +72,11 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
   } catch (error: any) {
     console.error('Error in /analyze route:', error);
     
-    // Emergency Fallback: If everything fails, return a funny "Technical Difficulty" roast
-    // so the UX remains premium and "in-character"
-    const emergencyRoast = {
-      score: 404, // Funny "Not Found" score
-      roast: "Listen, I tried to roast your site, but the heat was so intense my AI brains actually melted. Or maybe your site is so 'unique' that the servers simply gave up. Either way, check your internet or my API keys and try again before I start charging you for my therapy.",
-      suggestions: [
-        "Check if your API keys in .env are actually valid.",
-        "Stop overwhelming me with so many roast requests!",
-        "Double-check your internet connection.",
-        "Maybe just build a better site so I don't have to work so hard?"
-      ]
-    };
-
-    res.json({
-      url: req.body.url || 'unknown',
-      metadata: { title: 'Unknown', description: 'Analysis Error', headings: [], loadError: error.message },
-      scores: { performance: 0, accessibility: 0, bestPractices: 0, seo: 0 },
-      roast: emergencyRoast
+    // Temporarily returning full error details to the frontend for debugging
+    res.status(500).json({ 
+      error: 'An error occurred during analysis', 
+      details: error.message,
+      stack: error.stack 
     });
   }
 });
