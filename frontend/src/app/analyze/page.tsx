@@ -57,7 +57,16 @@ function AnalyzeContent() {
 
     const fetchAnalysis = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/analyze", {
+        const getApiUrl = () => {
+          // If the user has set a live production API URL, use it
+          if (process.env.NEXT_PUBLIC_API_URL) {
+            return `${process.env.NEXT_PUBLIC_API_URL}/api/analyze`;
+          }
+          // Otherwise default to local development
+          return "http://localhost:5000/api/analyze";
+        };
+
+        const response = await fetch(getApiUrl(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url }),
