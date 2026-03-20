@@ -36,20 +36,36 @@ const fetchLighthouseScores = async (url: string) => {
     return null;
   }
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+
     console.log(`[Lighthouse] Requesting scores from Browserless.io for ${url}...`);
-    const resp = await fetch(`https://chrome.browserless.io/lighthouse?token=${token}`, {
+    const resp = await fetch(`https://chrome.browserless.io/performance?token=${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        format: 'json',
       }),
+      signal: controller.signal,
     });
 
-    if (!resp.ok) throw new Error(`Browserless responded with ${resp.status}`);
+    clearTimeout(timeoutId);
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`Browserless responded with ${resp.status}: ${errText.slice(0, 100)}`);
+    }
     
     const result = await resp.json() as any;
-    const { categories } = result;
+    
+    // Support standard LHR or wrapped 'data'/'report'/'lhr'
+    const report = result.categories ? result : (result.data || result.report || result.lhr);
+
+    if (!report || !report.categories) {
+      return null;
+    }
+
+    const { categories } = report;
 
     const scores = {
       performance: Math.round((categories.performance?.score || 0) * 100),
