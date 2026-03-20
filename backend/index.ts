@@ -4,7 +4,6 @@ dotenv.config({ override: true });
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { fetchPageMetadata } from './services/puppeteer';
-import { runLighthouseAudit } from './services/lighthouse';
 import { generateRoast } from './services/openai';
 import { generateGeminiRoast } from './services/gemini';
 
@@ -14,13 +13,31 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Basic health check route
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Roast My Website backend is running!' });
 });
 
-// Setup api router
 const apiRouter = express.Router();
+
+// Optional: fetch Lighthouse scores from the external worker
+const fetchLighthouseScores = async (url: string) => {
+  const workerUrl = process.env.LIGHTHOUSE_WORKER_URL;
+  if (!workerUrl) {
+    console.log('[Lighthouse Worker] LIGHTHOUSE_WORKER_URL not set, skipping scores.');
+    return null;
+  }
+  try {
+    console.log(`[Lighthouse Worker] Requesting scores from ${workerUrl}...`);
+    const resp = await fetch(`${workerUrl}/analyze?url=${encodeURIComponent(url)}`);
+    if (!resp.ok) throw new Error(`Worker responded with ${resp.status}`);
+    const scores = await resp.json() as { performance: number; accessibility: number; bestPractices: number; seo: number };
+    console.log('[Lighthouse Worker] Scores received:', scores);
+    return scores;
+  } catch (err: any) {
+    console.warn('[Lighthouse Worker] Failed, continuing without scores:', err.message || err);
+    return null;
+  }
+};
 
 apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => {
   const { url } = req.body;
@@ -30,57 +47,44 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
   }
 
   try {
-    // 1. Fetch metadata (Puppeteer)
-    console.log(`[1/3] Fetching metadata for a ${url}...`);
+    // Step 1: Scrape rich page data via Browserless (no local Chrome)
+    console.log(`[1/3] Fetching metadata for ${url}...`);
     const metadata = await fetchPageMetadata(url);
+
     if (metadata.loadError && metadata.title === '') {
       return res.status(400).json({ error: `Failed to fetch URL: ${metadata.loadError}` });
     }
 
-    // Give Render a "cooling period" to reclaim RAM from the first Chrome process
-    console.log("Allowing RAM to settle before Lighthouse...");
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Step 2: Optional Lighthouse scores from external worker
+    console.log(`[2/3] Fetching Lighthouse scores...`);
+    const scores = await fetchLighthouseScores(url);
 
-    // 2. Run Lighthouse Audit
-    console.log(`[2/3] Running Lighthouse audit for ${url}...`);
-    const scores = await runLighthouseAudit(url);
-
-    // 3. Generate Roast (Gemini -> OpenAI -> Mock)
+    // Step 3: Generate roast with AI (Gemini → OpenAI → Mock)
     console.log(`[3/3] Generating roast...`);
     let roastData;
-    
+
     const hasGeminiKey = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here';
-    
+
     if (hasGeminiKey) {
       try {
-        console.log("Attempting Gemini for roast generation...");
+        console.log('Attempting Gemini for roast generation...');
         roastData = await generateGeminiRoast(metadata, scores);
       } catch (geminiError: any) {
-        console.error("Gemini failed, falling back to OpenAI/Mock:", geminiError.message || geminiError);
-        console.log("Falling back to OpenAI (or Mock if OpenAI missing)...");
+        console.error('Gemini failed, falling back to OpenAI/Mock:', geminiError.message || geminiError);
         roastData = await generateRoast(metadata, scores);
       }
     } else {
-      console.log("No Gemini key found, using OpenAI (or Mock if OpenAI missing)...");
+      console.log('No Gemini key, using OpenAI/Mock...');
       roastData = await generateRoast(metadata, scores);
     }
 
-    // Provide the combined payload to the frontend
-    res.json({
-      url,
-      metadata,
-      scores,
-      roast: roastData
-    });
+    res.json({ url, metadata, scores, roast: roastData });
 
   } catch (error: any) {
     console.error('Error in /analyze route:', error);
-    
-    // Temporarily returning full error details to the frontend for debugging
-    res.status(500).json({ 
-      error: 'An error occurred during analysis', 
+    res.status(500).json({
+      error: 'An error occurred during analysis',
       details: error.message,
-      stack: error.stack 
     });
   }
 });

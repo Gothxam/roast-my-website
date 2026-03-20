@@ -58,3 +58,34 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ── Background glow animations ───────────────────────────────────────── */
+/* Very slow, large-radius transforms — GPU composited, zero repaint cost */
+@keyframes glow1 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50%       { transform: translate(40px, -30px) scale(1.05); }
+}
+@keyframes glow2 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50%       { transform: translate(-50px, 25px) scale(1.08); }
+}
+@keyframes glow3 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50%       { transform: translate(30px, 40px) scale(0.95); }
+}
+
+.animate-glow-1 { animation: glow1 18s ease-in-out infinite; }
+.animate-glow-2 { animation: glow2 24s ease-in-out infinite; }
+.animate-glow-3 { animation: glow3 20s ease-in-out infinite; }
+
+/* Radial vignette — edges stay dark */
+.bg-radial-vignette {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+}
+
+/* ── Performance hints ────────────────────────────────────────────────── */
+/* Promote ticker to its own GPU layer so scroll doesn't repaint it */
+.ticker-track {
+  will-change: transform;
+  transform: translateZ(0);
+}
