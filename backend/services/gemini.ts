@@ -28,10 +28,11 @@ export const generateGeminiRoast = async (
   if (!client) throw new Error("Gemini API key not configured.");
 
   const modelsToTry = [
+    "gemma-3-27b-it",
     "gemini-2.0-flash",
     "gemini-2.5-flash-lite",
-    "gemini-2.5-pro",
-    "gemma-3-27b-it"
+    "gemini-2.5-pro"
+
   ];
 
   const missingAltImages = metadata.images?.filter(img => !img.alt).length || 0;
