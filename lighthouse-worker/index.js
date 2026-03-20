@@ -1,5 +1,6 @@
-const express = require('express');
-const chromeLauncher = require('chrome-launcher');
+import express from 'express';
+import * as chromeLauncher from 'chrome-launcher';
+import lighthouse from 'lighthouse';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -64,8 +65,7 @@ app.get('/analyze', async (req, res) => {
 async function runLighthouse(url) {
   let chrome;
   try {
-    // Dynamically import ESM lighthouse
-    const { default: lighthouse } = await import('lighthouse');
+    // Chrome launcher
 
     chrome = await chromeLauncher.launch({
       chromeFlags: [

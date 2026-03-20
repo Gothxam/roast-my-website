@@ -1,6 +1,7 @@
 {
   "name": "lighthouse-worker",
   "version": "1.0.0",
+  "type": "module",
   "description": "Standalone Lighthouse audit worker service",
   "main": "index.js",
   "scripts": {
