@@ -104,6 +104,28 @@ export default function SidebarStats({ result, score, scoreColor, scoreLabel }: 
         />
       </div>
 
+      {/* Lighthouse Performance Scores */}
+      {result.scores && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4 }}
+          className={`${glass} p-6 space-y-5`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Lighthouse Audit</h3>
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold">Mobile</span>
+          </div>
+          
+          <div className="space-y-4">
+            <MetricBar label="Performance" value={result.scores.performance} delay={0.5} />
+            <MetricBar label="Accessibility" value={result.scores.accessibility} delay={0.6} />
+            <MetricBar label="Best Practices" value={result.scores.bestPractices} delay={0.7} />
+            <MetricBar label="SEO" value={result.scores.seo} delay={0.8} />
+          </div>
+        </motion.div>
+      )}
+
       {/* Share nudge */}
       <div className={`${glass} p-6 space-y-4`}>
         <div className="flex items-center gap-2 mb-2">

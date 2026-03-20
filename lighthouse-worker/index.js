@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3001;
 // ─── Concurrency control ───────────────────────────────────────────────────
 // Only 1 Lighthouse run at a time. Extra requests wait in the queue.
 let isRunning = false;
-const TIMEOUT_MS = 120000; // 60 second hard timeout
+const TIMEOUT_MS = 120000; // 120 second hard timeout
 
 const runWithQueue = (fn) =>
   new Promise((resolve, reject) => {

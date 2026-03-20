@@ -1,6 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL] Uncaught Exception:', err);
+  // Optional: process.exit(1); depending on if you want it to restart
+});
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { fetchPageMetadata } from './services/puppeteer';
@@ -19,22 +28,40 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 const apiRouter = express.Router();
 
-// Optional: fetch Lighthouse scores from the external worker
+// Fetch Lighthouse scores from Browserless.io
 const fetchLighthouseScores = async (url: string) => {
-  const workerUrl = process.env.LIGHTHOUSE_WORKER_URL;
-  if (!workerUrl) {
-    console.log('[Lighthouse Worker] LIGHTHOUSE_WORKER_URL not set, skipping scores.');
+  const token = process.env.BROWSERLESS_API_KEY;
+  if (!token) {
+    console.log('[Lighthouse] BROWSERLESS_API_KEY not set, skipping scores.');
     return null;
   }
   try {
-    console.log(`[Lighthouse Worker] Requesting scores from ${workerUrl}...`);
-    const resp = await fetch(`${workerUrl}/analyze?url=${encodeURIComponent(url)}`);
-    if (!resp.ok) throw new Error(`Worker responded with ${resp.status}`);
-    const scores = await resp.json() as { performance: number; accessibility: number; bestPractices: number; seo: number };
-    console.log('[Lighthouse Worker] Scores received:', scores);
+    console.log(`[Lighthouse] Requesting scores from Browserless.io for ${url}...`);
+    const resp = await fetch(`https://chrome.browserless.io/lighthouse?token=${token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        format: 'json',
+      }),
+    });
+
+    if (!resp.ok) throw new Error(`Browserless responded with ${resp.status}`);
+    
+    const result = await resp.json() as any;
+    const { categories } = result;
+
+    const scores = {
+      performance: Math.round((categories.performance?.score || 0) * 100),
+      accessibility: Math.round((categories.accessibility?.score || 0) * 100),
+      bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
+      seo: Math.round((categories.seo?.score || 0) * 100),
+    };
+
+    console.log('[Lighthouse] Scores received:', scores);
     return scores;
   } catch (err: any) {
-    console.warn('[Lighthouse Worker] Failed, continuing without scores:', err.message || err);
+    console.warn('[Lighthouse] Failed, continuing without scores:', err.message || err);
     return null;
   }
 };
