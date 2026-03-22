@@ -14,83 +14,156 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config({ override: true });
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('[CRITICAL] Uncaught Exception:', err);
+    // Optional: process.exit(1); depending on if you want it to restart
+});
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const puppeteer_1 = require("./services/puppeteer");
-const lighthouse_1 = require("./services/lighthouse");
 const openai_1 = require("./services/openai");
 const gemini_1 = require("./services/gemini");
+const groq_1 = require("./services/groq");
+// @ts-ignore
+const express_rate_limit_1 = require("express-rate-limit");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-// Basic health check route
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Roast My Website backend is running!' });
 });
-// Setup api router
 const apiRouter = express_1.default.Router();
-apiRouter.post('/analyze', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// 1. Rate Limiting (2 requests per day per IP)
+const analyzeLimiter = (0, express_rate_limit_1.rateLimit)({
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 2,
+    message: {
+        error: "Daily limit reached. Try again tomorrow."
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+// 2. Simple In-Memory Cache
+const cache = new Map();
+// Fetch Lighthouse scores from Browserless.io
+const fetchLighthouseScores = (url) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
+    const token = process.env.BROWSERLESS_API_KEY;
+    if (!token) {
+        console.log('[Lighthouse] BROWSERLESS_API_KEY not set, skipping scores.');
+        return null;
+    }
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+        console.log(`[Lighthouse] Requesting scores from Browserless.io for ${url}...`);
+        const resp = yield fetch(`https://chrome.browserless.io/performance?token=${token}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url,
+            }),
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (!resp.ok) {
+            const errText = yield resp.text();
+            throw new Error(`Browserless responded with ${resp.status}: ${errText.slice(0, 100)}`);
+        }
+        const result = yield resp.json();
+        // Support standard LHR or wrapped 'data'/'report'/'lhr'
+        const report = result.categories ? result : (result.data || result.report || result.lhr);
+        if (!report || !report.categories) {
+            return null;
+        }
+        const { categories } = report;
+        const scores = {
+            performance: Math.round((((_a = categories.performance) === null || _a === void 0 ? void 0 : _a.score) || 0) * 100),
+            accessibility: Math.round((((_b = categories.accessibility) === null || _b === void 0 ? void 0 : _b.score) || 0) * 100),
+            bestPractices: Math.round((((_c = categories['best-practices']) === null || _c === void 0 ? void 0 : _c.score) || 0) * 100),
+            seo: Math.round((((_d = categories.seo) === null || _d === void 0 ? void 0 : _d.score) || 0) * 100),
+        };
+        console.log('[Lighthouse] Scores received:', scores);
+        return scores;
+    }
+    catch (err) {
+        console.warn('[Lighthouse] Failed, continuing without scores:', err.message || err);
+        return null;
+    }
+});
+apiRouter.post('/analyze', analyzeLimiter, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { url } = req.body;
     if (!url) {
         return res.status(400).json({ error: 'URL is required' });
     }
+    // Check Cache
+    if (cache.has(url)) {
+        console.log(`[CACHE] Returning cached result for ${url}`);
+        return res.json(cache.get(url));
+    }
     try {
-        // 1. Fetch metadata (Puppeteer)
-        console.log(`[1/3] Fetching metadata for a ${url}...`);
+        // Step 1: Scrape rich page data via Browserless (no local Chrome)
+        console.log(`[1/3] Fetching metadata for ${url}...`);
         const metadata = yield (0, puppeteer_1.fetchPageMetadata)(url);
         if (metadata.loadError && metadata.title === '') {
             return res.status(400).json({ error: `Failed to fetch URL: ${metadata.loadError}` });
         }
-        // 2. Run Lighthouse Audit
-        console.log(`[2/3] Running Lighthouse audit for ${url}...`);
-        const scores = yield (0, lighthouse_1.runLighthouseAudit)(url);
-        // 3. Generate Roast (Gemini -> OpenAI -> Mock)
+        // Step 2: Optional Lighthouse scores from external worker
+        console.log(`[2/3] Fetching Lighthouse scores...`);
+        const scores = yield fetchLighthouseScores(url);
+        // Step 3: Generate roast with AI (Groq → Gemini → OpenAI → Mock)
         console.log(`[3/3] Generating roast...`);
         let roastData;
+        const hasGroqKey = process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'your_groq_api_key_here';
         const hasGeminiKey = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here';
-        if (hasGeminiKey) {
+        if (hasGroqKey) {
             try {
-                console.log("Attempting Gemini for roast generation...");
+                console.log('Attempting Groq for roast generation...');
+                roastData = yield (0, groq_1.generateGroqRoast)(metadata, scores);
+            }
+            catch (groqError) {
+                console.warn('Groq failed, falling back to Gemini:', groqError.message);
+                if (hasGeminiKey) {
+                    try {
+                        roastData = yield (0, gemini_1.generateGeminiRoast)(metadata, scores);
+                    }
+                    catch (geminiError) {
+                        roastData = yield (0, openai_1.generateRoast)(metadata, scores);
+                    }
+                }
+                else {
+                    roastData = yield (0, openai_1.generateRoast)(metadata, scores);
+                }
+            }
+        }
+        else if (hasGeminiKey) {
+            try {
+                console.log('No Groq key, attempting Gemini...');
                 roastData = yield (0, gemini_1.generateGeminiRoast)(metadata, scores);
             }
             catch (geminiError) {
-                console.error("Gemini failed, falling back to OpenAI/Mock:", geminiError.message || geminiError);
-                console.log("Falling back to OpenAI (or Mock if OpenAI missing)...");
+                console.error('Gemini failed, falling back to OpenAI/Mock:', geminiError.message);
                 roastData = yield (0, openai_1.generateRoast)(metadata, scores);
             }
         }
         else {
-            console.log("No Gemini key found, using OpenAI (or Mock if OpenAI missing)...");
+            console.log('No premium AI keys found, using OpenAI/Mock...');
             roastData = yield (0, openai_1.generateRoast)(metadata, scores);
         }
-        // Provide the combined payload to the frontend
-        res.json({
-            url,
-            metadata,
-            scores,
-            roast: roastData
-        });
+        const finalResponse = { url, metadata, scores, roast: roastData };
+        // Save to Cache
+        cache.set(url, finalResponse);
+        res.json(finalResponse);
     }
     catch (error) {
         console.error('Error in /analyze route:', error);
-        // Emergency Fallback: If everything fails, return a funny "Technical Difficulty" roast
-        // so the UX remains premium and "in-character"
-        const emergencyRoast = {
-            score: 404, // Funny "Not Found" score
-            roast: "Listen, I tried to roast your site, but the heat was so intense my AI brains actually melted. Or maybe your site is so 'unique' that the servers simply gave up. Either way, check your internet or my API keys and try again before I start charging you for my therapy.",
-            suggestions: [
-                "Check if your API keys in .env are actually valid.",
-                "Stop overwhelming me with so many roast requests!",
-                "Double-check your internet connection.",
-                "Maybe just build a better site so I don't have to work so hard?"
-            ]
-        };
-        res.json({
-            url: req.body.url || 'unknown',
-            metadata: { title: 'Unknown', description: 'Analysis Error', headings: [], loadError: error.message },
-            scores: { performance: 0, accessibility: 0, bestPractices: 0, seo: 0 },
-            roast: emergencyRoast
+        res.status(500).json({
+            error: 'An error occurred during analysis',
+            details: error.message,
         });
     }
 }));
