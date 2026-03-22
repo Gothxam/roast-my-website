@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateGroqRoast = void 0;
-// @ts-ignore
 const groq_sdk_1 = __importDefault(require("groq-sdk"));
 let groqClient = null;
 const getGroqClient = () => {

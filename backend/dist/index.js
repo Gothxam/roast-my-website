@@ -27,7 +27,6 @@ const puppeteer_1 = require("./services/puppeteer");
 const openai_1 = require("./services/openai");
 const gemini_1 = require("./services/gemini");
 const groq_1 = require("./services/groq");
-// @ts-ignore
 const express_rate_limit_1 = require("express-rate-limit");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;

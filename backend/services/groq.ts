@@ -1,4 +1,3 @@
-// @ts-ignore
 import Groq from "groq-sdk";
 import { PageMetadata } from "./puppeteer";
 import { LighthouseScores } from "./gemini";

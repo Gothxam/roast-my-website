@@ -16,7 +16,6 @@ import { fetchPageMetadata } from './services/puppeteer';
 import { generateRoast } from './services/openai';
 import { generateGeminiRoast } from './services/gemini';
 import { generateGroqRoast } from './services/groq';
-// @ts-ignore
 import { rateLimit } from "express-rate-limit";
 
 const app = express();
