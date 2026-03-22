@@ -1,6 +1,10 @@
 // @ts-nocheck
-import dotenv from 'dotenv';
-dotenv.config({ override: true });
+try {
+  const dotenv = require('dotenv');
+  dotenv.config({ override: true });
+} catch (e) {
+  console.warn('[Dotenv] Skipping local environment setup (Production mode)');
+}
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);

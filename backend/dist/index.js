@@ -13,8 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-nocheck
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config({ override: true });
+try {
+    const dotenv = require('dotenv');
+    dotenv.config({ override: true });
+}
+catch (e) {
+    console.warn('[Dotenv] Skipping local environment setup (Production mode)');
+}
 process.on('unhandledRejection', (reason, promise) => {
     console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
 });
