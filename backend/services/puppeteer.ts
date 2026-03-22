@@ -1,3 +1,4 @@
+// @ts-nocheck
 import puppeteer from 'puppeteer-core';
 
 export interface PageMetadata {

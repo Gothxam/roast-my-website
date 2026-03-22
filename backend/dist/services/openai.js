@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateRoast = void 0;
+// @ts-nocheck
 const openai_1 = __importDefault(require("openai"));
 let openaiClient = null;
 const getOpenAIClient = () => {

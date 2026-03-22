@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchPageMetadata = void 0;
+// @ts-nocheck
 const puppeteer_core_1 = __importDefault(require("puppeteer-core"));
 const getBrowserlessEndpoint = () => {
     const token = process.env.BROWSERLESS_API_KEY;

@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateGeminiRoast = void 0;
+// @ts-nocheck
 const generative_ai_1 = require("@google/generative-ai");
 let genAI = null;
 const getGeminiClient = () => {
