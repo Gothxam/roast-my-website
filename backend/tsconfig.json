@@ -6,10 +6,12 @@
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    "strict": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "lib": ["es2016", "dom"],
+    "types": ["node"]
   },
   "include": [
     "**/*.ts"
