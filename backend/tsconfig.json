@@ -9,8 +9,7 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "typeRoots": ["./node_modules/@types", "./node_modules"]
+    "moduleResolution": "node"
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
