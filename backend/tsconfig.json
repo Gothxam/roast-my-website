@@ -10,8 +10,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "lib": ["es2016", "dom"],
-    "types": ["node"]
+    "lib": ["es2016", "dom"]
   },
   "include": [
     "**/*.ts"
