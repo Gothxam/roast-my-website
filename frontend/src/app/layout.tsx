@@ -4,6 +4,7 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import ThreeBackground from "@/components/ThreeBackground";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import PageLoader from "@/components/PageLoader";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -35,8 +36,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThreeBackground />
         <Navbar />
         <SmoothScroll>
-          <div className="pt-16">
-            {children}
+          <div className="pt-16 min-h-screen flex flex-col">
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
           </div>
         </SmoothScroll>
       </body>
