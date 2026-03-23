@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PageMetadata } from "./puppeteer";
 import { RoastResult } from "./openai";

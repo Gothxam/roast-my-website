@@ -1,10 +1,5 @@
-// @ts-nocheck
-try {
-  const dotenv = require('dotenv');
-  dotenv.config({ override: true });
-} catch (e) {
-  console.warn('[Dotenv] Skipping local environment setup (Production mode)');
-}
+import dotenv from 'dotenv';
+dotenv.config({ override: true });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
@@ -20,8 +15,6 @@ import cors from 'cors';
 import { fetchPageMetadata } from './services/puppeteer';
 import { generateRoast } from './services/openai';
 import { generateGeminiRoast } from './services/gemini';
-import { generateGroqRoast } from './services/groq';
-import { rateLimit } from "express-rate-limit";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,20 +27,6 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 const apiRouter = express.Router();
-
-// 1. Rate Limiting (2 requests per day per IP)
-const analyzeLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 1 day
-  max: 2,
-  message: {
-    error: "Daily limit reached. Try again tomorrow."
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// 2. Simple In-Memory Cache
-const cache = new Map<string, any>();
 
 // Fetch Lighthouse scores from Browserless.io
 const fetchLighthouseScores = async (url: string) => {
@@ -103,17 +82,11 @@ const fetchLighthouseScores = async (url: string) => {
   }
 };
 
-apiRouter.post('/analyze', analyzeLimiter, async (req: Request, res: Response): Promise<any> => {
+apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => {
   const { url } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
-  }
-
-  // Check Cache
-  if (cache.has(url)) {
-    console.log(`[CACHE] Returning cached result for ${url}`);
-    return res.json(cache.get(url));
   }
 
   try {
@@ -129,48 +102,26 @@ apiRouter.post('/analyze', analyzeLimiter, async (req: Request, res: Response): 
     console.log(`[2/3] Fetching Lighthouse scores...`);
     const scores = await fetchLighthouseScores(url);
 
-    // Step 3: Generate roast with AI (Groq → Gemini → OpenAI → Mock)
+    // Step 3: Generate roast with AI (Gemini → OpenAI → Mock)
     console.log(`[3/3] Generating roast...`);
     let roastData;
 
-    const hasGroqKey = process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'your_groq_api_key_here';
     const hasGeminiKey = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here';
 
-    if (hasGroqKey) {
+    if (hasGeminiKey) {
       try {
-        console.log('Attempting Groq for roast generation...');
-        roastData = await generateGroqRoast(metadata, scores);
-      } catch (groqError: any) {
-        console.warn('Groq failed, falling back to Gemini:', groqError.message);
-        if (hasGeminiKey) {
-          try {
-            roastData = await generateGeminiRoast(metadata, scores);
-          } catch (geminiError) {
-            roastData = await generateRoast(metadata, scores);
-          }
-        } else {
-          roastData = await generateRoast(metadata, scores);
-        }
-      }
-    } else if (hasGeminiKey) {
-      try {
-        console.log('No Groq key, attempting Gemini...');
+        console.log('Attempting Gemini for roast generation...');
         roastData = await generateGeminiRoast(metadata, scores);
       } catch (geminiError: any) {
-        console.error('Gemini failed, falling back to OpenAI/Mock:', geminiError.message);
+        console.error('Gemini failed, falling back to OpenAI/Mock:', geminiError.message || geminiError);
         roastData = await generateRoast(metadata, scores);
       }
     } else {
-      console.log('No premium AI keys found, using OpenAI/Mock...');
+      console.log('No Gemini key, using OpenAI/Mock...');
       roastData = await generateRoast(metadata, scores);
     }
 
-    const finalResponse = { url, metadata, scores, roast: roastData };
-    
-    // Save to Cache
-    cache.set(url, finalResponse);
-
-    res.json(finalResponse);
+    res.json({ url, metadata, scores, roast: roastData });
 
   } catch (error: any) {
     console.error('Error in /analyze route:', error);

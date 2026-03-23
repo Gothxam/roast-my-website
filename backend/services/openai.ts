@@ -1,4 +1,3 @@
-// @ts-nocheck
 import OpenAI from 'openai';
 import { PageMetadata } from './puppeteer';
 import { LighthouseScores } from './gemini';
