@@ -1,9 +1,0 @@
-{
-  "name": "roast-my-website-root",
-  "private": true,
-  "scripts": {
-    "install-all": "npm install --prefix backend && npm install --prefix frontend",
-    "build": "npm install --prefix backend && npm run build --prefix backend",
-    "start": "npm start --prefix backend"
-  }
-}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
-import SplineBackground from "@/components/SplineBackground";
+import ThreeBackground from "@/components/ThreeBackground";
 import Navbar from "@/components/Navbar";
 import PageLoader from "@/components/PageLoader";
 
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white selection:bg-purple-500/30`}>
         <PageLoader />
-        <SplineBackground />
+        <ThreeBackground />
         <Navbar />
         <SmoothScroll>
           <div className="pt-16">
