@@ -40,7 +40,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <main className="flex-grow">
               {children}
             </main>
-            <Footer />
           </div>
         </SmoothScroll>
       </body>

@@ -15,6 +15,7 @@ import cors from 'cors';
 import { fetchPageMetadata } from './services/puppeteer';
 import { generateRoast } from './services/openai';
 import { generateGeminiRoast } from './services/gemini';
+import { generateGroqRoast } from './services/groq';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -90,7 +91,7 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
   }
 
   try {
-    // Step 1: Scrape rich page data via Browserless (no local Chrome)
+    // Step 1: Scrape rich page data
     console.log(`[1/3] Fetching metadata for ${url}...`);
     const metadata = await fetchPageMetadata(url);
 
@@ -98,27 +99,32 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
       return res.status(400).json({ error: `Failed to fetch URL: ${metadata.loadError}` });
     }
 
-    // Step 2: Optional Lighthouse scores from external worker
+    // Step 2: Optional Lighthouse scores
     console.log(`[2/3] Fetching Lighthouse scores...`);
     const scores = await fetchLighthouseScores(url);
 
-    // Step 3: Generate roast with AI (Gemini → OpenAI → Mock)
+    // Step 3: Generate roast with AI Fallback Chain (Groq → Gemini → OpenAI/Mock)
     console.log(`[3/3] Generating roast...`);
     let roastData;
 
-    const hasGeminiKey = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here';
-
-    if (hasGeminiKey) {
+    try {
+      console.log('--- Attempt 1: Groq ---');
+      roastData = await generateGroqRoast(metadata, scores);
+    } catch (groqError: any) {
+      console.warn("Groq failed, falling back to Gemini:", groqError.message);
       try {
-        console.log('Attempting Gemini for roast generation...');
+        console.log('--- Attempt 2: Gemini ---');
         roastData = await generateGeminiRoast(metadata, scores);
       } catch (geminiError: any) {
-        console.error('Gemini failed, falling back to OpenAI/Mock:', geminiError.message || geminiError);
-        roastData = await generateRoast(metadata, scores);
+        console.warn('Gemini failed, falling back to OpenAI/Mock:', geminiError.message);
+        try {
+          console.log('--- Attempt 3: OpenAI/Mock ---');
+          roastData = await generateRoast(metadata, scores);
+        } catch (openAiError: any) {
+          console.error('Final fallback failed:', openAiError.message);
+          throw new Error('All AI services failed to generate a roast.');
+        }
       }
-    } else {
-      console.log('No Gemini key, using OpenAI/Mock...');
-      roastData = await generateRoast(metadata, scores);
     }
 
     res.json({ url, metadata, scores, roast: roastData });
