@@ -64,16 +64,18 @@ ${metadata.headings?.length ? metadata.headings.join('\n') : 'No headings found!
 **Links on page:** ${metadata.links?.length || 0}
 ${lighthouseSection}
 Provide:
-1. A "Design Score" from 0–100. Calculate this YOURSELF based on the evidence above — do NOT use the example number. Low score if major issues found, high if everything looks good.
+1. A "Vibe Score" from 0–100. Calculate this YOURSELF based on the evidence above — do NOT use the example number. Low score if major issues found, high if everything looks good.
 2. A punchy roast paragraph (funny but helpful, under 120 words).
-3. 4–5 actionable, specific suggestions based on what you found.
+3. A "punchline": A single short, high-impact witty sentence from the roast (max 10 words).
+4. 4–5 actionable, specific suggestions based on what you found.
 
 IMPORTANT: The designScore must reflect your ACTUAL analysis, not the example number.
 
 Return ONLY valid JSON (no code block, no markdown):
 {
-  "designScore": <YOUR_CALCULATED_SCORE_0_TO_100>,
+  "vibeScore": <YOUR_CALCULATED_SCORE_0_TO_100>,
   "roast": "...",
+  "punchline": "...",
   "suggestions": ["...", "...", "...", "..."]
 }
 `;
@@ -91,8 +93,9 @@ Return ONLY valid JSON (no code block, no markdown):
 
       console.log(`[Gemini] Success with: ${modelName}`);
       return {
-        score: parsed.designScore || 50,
+        score: parsed.vibeScore || 50,
         roast: parsed.roast || 'Could not generate roast.',
+        punchline: parsed.punchline || '',
         suggestions: parsed.suggestions || []
       };
     } catch (error: any) {

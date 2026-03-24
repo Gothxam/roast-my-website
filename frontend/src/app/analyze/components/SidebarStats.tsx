@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Hash, Image, XCircle, MousePointerClick, FileText, Share2, Twitter, Linkedin, Copy, CheckCircle2 } from "lucide-react";
+import { Hash, Image, XCircle, MousePointerClick, FileText, Share2, Twitter, Linkedin, Copy, CheckCircle2, MessageCircle } from "lucide-react";
 import { AnalysisResult } from "@/types/analyze";
 
 interface SidebarStatsProps {
@@ -134,50 +134,67 @@ export default function SidebarStats({ result, score, scoreColor, scoreLabel }: 
         </div>
         <p className="text-xs text-gray-400">Survived the roast? Let the world see your vibe score.</p>
         
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {/* Twitter */}
           <button
             onClick={() => {
-              const text = encodeURIComponent(`I just survived a brutal code review from an AI senior dev and got a ${score}/100 vibe score 💀🔥\n\nSee my roast or get yours here:\n`);
+              const punchline = result.roast.punchline || `I just got a ${score}/100 vibe score 💀🔥`;
+              const text = encodeURIComponent(`"${punchline}"\n\nSee my full roast or get yours here:\n`);
               window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(window.location.href)}`, "_blank");
             }}
-            className="flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/20 text-white transition-all hover:scale-105 active:scale-95 group"
+            className="flex items-center gap-3 py-3 px-4 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/20 text-white transition-all hover:scale-[1.02] active:scale-95 group"
           >
-            <Twitter className="w-5 h-5 text-[#1DA1F2] group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] font-medium text-gray-300">Twitter</span>
+            <Twitter className="w-5 h-5 text-[#1DA1F2]" />
+            <span className="text-xs font-semibold">Twitter</span>
           </button>
           
+          {/* LinkedIn */}
           <button
             onClick={() => {
-              const title = encodeURIComponent("Roast My Website");
-              const text = encodeURIComponent(`I just survived a brutal code review from an AI senior dev and got a ${score}/100 vibe score 💀🔥`);
+              const punchline = result.roast.punchline || `I just got a ${score}/100 vibe score 💀🔥`;
               const url = encodeURIComponent(window.location.href);
-              window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${url}&title=${title}&summary=${text}&source=${title}`, "_blank");
+              window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank");
             }}
-            className="flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-xl bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border border-[#0A66C2]/20 text-white transition-all hover:scale-105 active:scale-95 group"
+            className="flex items-center gap-3 py-3 px-4 rounded-xl bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border border-[#0A66C2]/20 text-white transition-all hover:scale-[1.02] active:scale-95 group"
           >
-            <Linkedin className="w-5 h-5 text-[#0A66C2] group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] font-medium text-gray-300">LinkedIn</span>
+            <Linkedin className="w-5 h-5 text-[#0A66C2]" />
+            <span className="text-xs font-semibold">LinkedIn</span>
           </button>
-          
+
+          {/* WhatsApp */}
           <button
             onClick={() => {
-              const textToCopy = `I just survived a brutal code review from an AI senior dev and got a ${score}/100 vibe score 🔥\n\nSee my roast or get yours here:\n${window.location.href}`;
+              const punchline = result.roast.punchline || `I just got a ${score}/100 vibe score 💀🔥`;
+              const text = encodeURIComponent(`"${punchline}"\n\nSee my full roast at: ${window.location.href}`);
+              window.open(`https://wa.me/?text=${text}`, "_blank");
+            }}
+            className="flex items-center gap-3 py-3 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/20 text-white transition-all hover:scale-[1.02] active:scale-95 group"
+          >
+            <MessageCircle className="w-5 h-5 text-[#25D366]" />
+            <span className="text-xs font-semibold">WhatsApp</span>
+          </button>
+          
+          {/* Copy Link */}
+          <button
+            onClick={() => {
+              const punchline = result.roast.punchline || `I just got a ${score}/100 vibe score 💀🔥`;
+              const textToCopy = `"${punchline}"\n\nSee my full roast at: ${window.location.href}`;
               navigator.clipboard.writeText(textToCopy);
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
-            className={`flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-xl border transition-all hover:scale-105 active:scale-95 group ${
+            className={`flex items-center gap-3 py-3 px-4 rounded-xl border transition-all hover:scale-[1.02] active:scale-95 group ${
               copied 
                 ? "bg-green-500/20 border-green-500/30 text-green-400" 
                 : "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20 text-white"
             }`}
           >
             {copied ? (
-              <CheckCircle2 className="w-5 h-5 text-green-400 group-hover:scale-110 transition-transform" />
+              <CheckCircle2 className="w-5 h-5 text-green-400" />
             ) : (
-              <Copy className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
+              <Copy className="w-5 h-5 text-purple-400" />
             )}
-            <span className={`text-[10px] font-medium ${copied ? "text-green-400" : "text-gray-300"}`}>
+            <span className="text-xs font-semibold">
               {copied ? "Copied!" : "Copy Link"}
             </span>
           </button>

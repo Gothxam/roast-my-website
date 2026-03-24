@@ -18,6 +18,7 @@ export interface AnalysisResult {
   roast: {
     score: number;
     roast: string;
+    punchline: string;
     suggestions: string[];
   };
 }

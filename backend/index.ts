@@ -165,6 +165,14 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
   }
 });
 
+apiRouter.get('/results', (req: Request, res: Response): any => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL required' });
+  const result = getCachedResult(url as string);
+  if (!result) return res.status(404).json({ error: 'Not found' });
+  res.json(result);
+});
+
 app.use('/api', apiRouter);
 
 app.listen(PORT, () => {

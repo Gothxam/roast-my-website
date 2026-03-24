@@ -1,15 +1,20 @@
 import { ImageResponse } from 'next/og';
+import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const urlParam = searchParams.get('url');
-    
-    // When no URL is provided, show the default marketing OG image
-    const isDefault = !urlParam;
-    const displayUrl = urlParam || 'your-site.com';
+    const { searchParams } = new URL(req.url);
+
+    // Params from the analyze results
+    const score = searchParams.get('score') || '0';
+    const rawUrl = searchParams.get('url') || 'website';
+    const punchline = searchParams.get('punchline') || "The roast you didn't ask for.";
+
+    // Clean URL for display
+    let displayUrl = rawUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    if (displayUrl.length > 25) displayUrl = displayUrl.substring(0, 22) + '...';
 
     return new ImageResponse(
       (
@@ -21,60 +26,74 @@ export async function GET(request: Request) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#050508',
-            // Create a pseudo-Spline glow effect using CSS gradients
-            backgroundImage: 'radial-gradient(circle at 20% 0%, rgba(88,28,235,0.4) 0%, transparent 60%), radial-gradient(circle at 80% 100%, rgba(234,88,12,0.3) 0%, transparent 60%)',
+            backgroundColor: '#050505',
+            backgroundImage: 'radial-gradient(circle at 50% 50%, #1a1a1a 0%, #050505 100%)',
+            padding: '40px',
+            fontFamily: 'sans-serif',
           }}
         >
-          {/* Glass Card Container */}
+          {/* Main Card */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '60px 80px',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '2px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '40px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '32px',
+              padding: '60px',
+              width: '90%',
+              maxWidth: '1000px',
+              alignItems: 'center',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
             }}
           >
-            <div style={{ fontSize: 100, marginBottom: 30 }}>🔥</div>
-            
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 70,
-                fontWeight: 800,
-                color: 'white',
-                marginBottom: 20,
-                letterSpacing: '-0.03em',
-              }}
-            >
-              Roast My Website
+            {/* Header: URL */}
+            <div style={{ display: 'flex', color: 'rgba(255,255,255,0.5)', fontSize: '24px', marginBottom: '20px', letterSpacing: '4px', textTransform: 'uppercase' }}>
+              Auditing: {displayUrl}
             </div>
-            
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 36,
-                color: '#a1a1aa',
-                marginBottom: 10,
-              }}
-            >
-              {isDefault ? 'The brutal truth about' : 'AI senior dev is reviewing:'}
+
+            {/* Score Ring / Display */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '30px', marginBottom: '40px' }}>
+              <div style={{ fontSize: '100px', fontWeight: 'bold', color: '#fff', background: 'linear-gradient(to bottom right, #ff4d4d, #f9cb28)', backgroundClip: 'text', WebkitBackgroundClip: 'text' }}>
+                {score}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ color: '#fff', fontSize: '32px', fontWeight: 'bold' }}>Vibe Score</div>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '20px' }}>🔥 Brutally Honest</div>
+              </div>
             </div>
-            
+
+            {/* The Punchline */}
             <div
               style={{
                 display: 'flex',
-                fontSize: 55,
-                fontWeight: 800,
-                color: '#f97316', // orange-500
+                fontSize: '48px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textAlign: 'center',
+                lineHeight: '1.2',
+                marginTop: '10px',
               }}
             >
-              {displayUrl}
+              "{punchline}"
+            </div>
+
+            {/* Branding Footer */}
+            <div
+              style={{
+                display: 'flex',
+                marginTop: '60px',
+                padding: '10px 30px',
+                borderRadius: '100px',
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                color: '#fff',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              <span>RoastMyWebsite.ai</span>
             </div>
           </div>
         </div>
@@ -84,8 +103,9 @@ export async function GET(request: Request) {
         height: 630,
       }
     );
-  } catch (e: any) {
-    console.error(e);
-    return new Response(`Failed to generate image`, { status: 500 });
+  } catch (error: any) {
+    return new Response(`Failed to generate the image`, {
+      status: 500,
+    });
   }
 }
