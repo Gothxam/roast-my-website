@@ -56,9 +56,9 @@ const fetchLighthouseScores = async (url: string) => {
       const errText = await resp.text();
       throw new Error(`Browserless responded with ${resp.status}: ${errText.slice(0, 100)}`);
     }
-    
+
     const result = await resp.json() as any;
-    
+
     // Support standard LHR or wrapped 'data'/'report'/'lhr'
     const report = result.categories ? result : (result.data || result.report || result.lhr);
 
