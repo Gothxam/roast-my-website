@@ -66,6 +66,7 @@ EXPECTED JSON OUTPUT:
 {
   "vibeScore": <0-100, be brutally critical>,
   "roast": "<1-2 paragraphs of sharp, group-chat style feedback>",
+  "punchline": "<one short, high-impact witty sentence from the roast, max 10 words>",
   "suggestions": ["<suggestion 1>", "<suggestion 2>", "<suggestion 3>", "<suggestion 4>"]
 }
 `;
@@ -91,6 +92,7 @@ EXPECTED JSON OUTPUT:
     return {
       score: parsed.vibeScore || 50,
       roast: parsed.roast || "Could not generate roast.",
+      punchline: parsed.punchline || '',
       suggestions: parsed.suggestions || [],
     };
   } catch (error: any) {

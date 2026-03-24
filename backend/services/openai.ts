@@ -16,6 +16,7 @@ const getOpenAIClient = () => {
 export interface RoastResult {
   score: number;
   roast: string;
+  punchline: string;
   suggestions: string[];
 }
 
@@ -29,6 +30,7 @@ export const generateRoast = async (
     return {
       score: 72,
       roast: "I couldn't fully roast your website — running in mock mode. Add a GEMINI_API_KEY or OPENAI_API_KEY to your .env for real feedback!",
+      punchline: "Mock mode is on, but your site is still questionable.",
       suggestions: [
         "Set a GEMINI_API_KEY in .env to enable real AI roasting.",
         "Ensure your site is publicly accessible.",
@@ -57,8 +59,8 @@ Images total: ${metadata.images?.length || 0}, Missing alt text: ${missingAltIma
 Sample content: ${metadata.textContent?.slice(0, 400) || 'None'}
 ${scoreSection}
 
-Provide a design score 0-100, a short funny roast (under 120 words), and 4 actionable suggestions.
-Respond ONLY as JSON: { "designScore": 65, "roast": "...", "suggestions": ["..."] }
+Provide a design score 0-100, a short funny roast (under 120 words), a "punchline" (one single best witty line from the roast, max 10 words), and 4 actionable suggestions.
+Respond ONLY as JSON: { "designScore": 65, "roast": "...", "punchline": "...", "suggestions": ["..."] }
 `;
 
   try {
@@ -73,6 +75,7 @@ Respond ONLY as JSON: { "designScore": 65, "roast": "...", "suggestions": ["..."
     return {
       score: result.designScore || 50,
       roast: result.roast || 'Could not generate roast.',
+      punchline: result.punchline || '',
       suggestions: result.suggestions || []
     };
   } catch (error: any) {
@@ -80,6 +83,7 @@ Respond ONLY as JSON: { "designScore": 65, "roast": "...", "suggestions": ["..."
     return {
       score: 0,
       roast: `Failed to generate roast: ${error.message}`,
+      punchline: "The AI is too stunned to speak.",
       suggestions: ['Check your OPENAI_API_KEY in .env.']
     };
   }
