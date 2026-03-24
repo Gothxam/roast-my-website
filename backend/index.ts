@@ -16,6 +16,8 @@ import { fetchPageMetadata } from './services/puppeteer';
 import { generateRoast } from './services/openai';
 import { generateGeminiRoast } from './services/gemini';
 import { generateGroqRoast } from './services/groq';
+import { checkRateLimit, incrementRateLimit } from './services/rateLimiter';
+import { getCachedResult, setCachedResult } from './services/cache';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -91,6 +93,25 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
   }
 
   try {
+    // Phase 1: Rate Limiting
+    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+    const cleanIp = ip.split(',')[0].trim();
+    
+    const { allowed, remaining } = checkRateLimit(cleanIp);
+    if (!allowed) {
+      return res.status(429).json({ 
+        error: 'Too many roasts today. Come back tomorrow 🔥',
+        details: 'Daily limit reached for this IP.'
+      });
+    }
+
+    // Phase 1: Caching
+    const cached = getCachedResult(url);
+    if (cached) {
+      console.log(`[Cache] Serving cached result for ${url}`);
+      return res.json(cached);
+    }
+
     // Step 1: Scrape rich page data
     console.log(`[1/3] Fetching metadata for ${url}...`);
     const metadata = await fetchPageMetadata(url);
@@ -127,7 +148,13 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
       }
     }
 
-    res.json({ url, metadata, scores, roast: roastData });
+    const result = { url, metadata, scores, roast: roastData };
+
+    // Update Rate Limit and Cache
+    incrementRateLimit(cleanIp);
+    setCachedResult(url, result);
+
+    res.json(result);
 
   } catch (error: any) {
     console.error('Error in /analyze route:', error);
