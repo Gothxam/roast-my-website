@@ -23,20 +23,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
   try {
     const res = await fetch(`${apiBase}/api/results?url=${encodeURIComponent(urlParams)}`, {
-      next: { revalidate: 3600 } // Cache metadata for an hour
+      next: { revalidate: 3600 }
     });
     if (res.ok) {
       const data = await res.json();
-      score = data.scores?.vibeScore || data.roast?.vibeScore || score; 
-      // Handle different response structures from AI
+      // Corrected score path: data.roast.score
+      score = data.roast?.score?.toString() || score;
       if (data.roast?.punchline) punchline = data.roast.punchline;
-      else if (data.punchline) punchline = data.punchline;
     }
   } catch (err) {
     console.warn("Metadata fetch failed, using defaults.");
   }
 
-  const ogImageUrl = `/api/og?score=${score}&url=${encodeURIComponent(urlParams)}&punchline=${encodeURIComponent(punchline)}`;
+  // Use absolute URL for OG image to ensure bots can see it
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://roastmyweb.site";
+  const ogImageUrl = `${siteUrl}/api/og?score=${score}&url=${encodeURIComponent(urlParams)}&punchline=${encodeURIComponent(punchline)}`;
 
   return {
     title: `Roast of ${urlParams} | Roast My Website`,
