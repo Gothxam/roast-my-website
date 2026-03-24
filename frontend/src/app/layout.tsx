@@ -10,8 +10,14 @@ import PageLoader from "@/components/PageLoader";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL 
+  ? process.env.NEXT_PUBLIC_SITE_URL 
+  : process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}` 
+    : "http://localhost:3000";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://roastmyweb.site"),
+  metadataBase: new URL(siteUrl),
   title: "Roast My Website | Brutal AI Website Audits",
   description: "Get a brutal, honest, and actionable AI review of your website's design, performance, and SEO. Prepare to be roasted by a senior frontend dev.",
   keywords: ["website roast", "AI website auditor", "lighthouse score", "frontend developer roast", "website feedback", "UX review"],
