@@ -94,10 +94,14 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
 
   try {
     // Phase 1: Rate Limiting
-    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
-    const cleanIp = ip.split(',')[0].trim();
+    const forwarded = req.headers['x-forwarded-for'] as string;
+    const realIp = req.headers['x-real-ip'] as string;
+    const cfIp = req.headers['cf-connecting-ip'] as string;
     
-    const { allowed, remaining } = checkRateLimit(cleanIp);
+    const ip = forwarded?.split(',')[0].trim() || realIp || cfIp || req.socket.remoteAddress || 'unknown';
+    console.log(`[RateLimit] Detected IP: ${ip} | User-Agent: ${req.headers['user-agent']?.slice(0, 50)}`);
+    
+    const { allowed, remaining } = checkRateLimit(ip);
     if (!allowed) {
       return res.status(429).json({ 
         error: 'Too many roasts today. Come back tomorrow 🔥',
@@ -151,7 +155,7 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
     const result = { url, metadata, scores, roast: roastData };
 
     // Update Rate Limit and Cache
-    incrementRateLimit(cleanIp);
+    incrementRateLimit(ip);
     setCachedResult(url, result);
 
     res.json(result);
