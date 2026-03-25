@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Hash, Image, XCircle, MousePointerClick, FileText, Share2, Twitter, Linkedin, Copy, CheckCircle2, MessageCircle } from "lucide-react";
 import { AnalysisResult } from "@/types/analyze";
+import { trackEvent } from "@/components/UserTracker";
 
 interface SidebarStatsProps {
   result: AnalysisResult;
@@ -141,6 +142,7 @@ export default function SidebarStats({ result, score, scoreColor, scoreLabel }: 
               const punchline = result.roast.punchline || `I just got a ${score}/100 vibe score 💀🔥`;
               const text = encodeURIComponent(`"${punchline}"\n\nSee my full roast or get yours here:\n`);
               window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(window.location.href)}`, "_blank");
+              trackEvent("share");
             }}
             className="flex items-center gap-3 py-3 px-4 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/20 text-white transition-all hover:scale-[1.02] active:scale-95 group"
           >
@@ -154,6 +156,7 @@ export default function SidebarStats({ result, score, scoreColor, scoreLabel }: 
               const punchline = result.roast.punchline || `I just got a ${score}/100 vibe score 💀🔥`;
               const url = encodeURIComponent(window.location.href);
               window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank");
+              trackEvent("share");
             }}
             className="flex items-center gap-3 py-3 px-4 rounded-xl bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border border-[#0A66C2]/20 text-white transition-all hover:scale-[1.02] active:scale-95 group"
           >
@@ -167,6 +170,7 @@ export default function SidebarStats({ result, score, scoreColor, scoreLabel }: 
               const punchline = result.roast.punchline || `I just got a ${score}/100 vibe score 💀🔥`;
               const text = encodeURIComponent(`"${punchline}"\n\nSee my full roast at: ${window.location.href}`);
               window.open(`https://wa.me/?text=${text}`, "_blank");
+              trackEvent("share");
             }}
             className="flex items-center gap-3 py-3 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/20 text-white transition-all hover:scale-[1.02] active:scale-95 group"
           >
@@ -182,6 +186,7 @@ export default function SidebarStats({ result, score, scoreColor, scoreLabel }: 
               navigator.clipboard.writeText(textToCopy);
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
+              trackEvent("share");
             }}
             className={`flex items-center gap-3 py-3 px-4 rounded-xl border transition-all hover:scale-[1.02] active:scale-95 group ${
               copied 
