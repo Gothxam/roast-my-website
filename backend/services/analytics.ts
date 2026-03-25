@@ -1,9 +1,17 @@
 import { Redis } from "@upstash/redis";
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || "",
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
-});
+let redis: Redis | null = null;
+
+const getRedis = () => {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
+  if (!redis) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  }
+  return redis;
+};
 
 export interface UserStats {
   roasts: number;
@@ -13,10 +21,8 @@ export interface UserStats {
 }
 
 export const trackEvent = async (userId: string, event: "roast" | "share") => {
-  if (!process.env.UPSTASH_REDIS_REST_URL) {
-    console.warn("[Analytics] Redis not configured, skipping tracking.");
-    return;
-  }
+  const redis = getRedis();
+  if (!redis) return;
 
   const key = `user:${userId}`;
   const now = Date.now();
@@ -47,7 +53,8 @@ export const trackEvent = async (userId: string, event: "roast" | "share") => {
 };
 
 export const getMetrics = async () => {
-  if (!process.env.UPSTASH_REDIS_REST_URL) {
+  const redis = getRedis();
+  if (!redis) {
     return { error: "Redis not configured" };
   }
 
@@ -55,11 +62,20 @@ export const getMetrics = async () => {
     const keys = await redis.keys("user:*");
     const totalUsers = keys.length;
 
+    if (totalUsers === 0) {
+      return {
+        totalUsers: 0,
+        totalRoasts: 0,
+        totalShares: 0,
+        shareRate: 0,
+      };
+    }
+
     let totalRoasts = 0;
     let totalShares = 0;
     let usersWhoShared = 0;
 
-    // Fetch all user stats (batching if needed, but keeping it simple for now)
+    // Fetch all user stats
     const pipeline = redis.pipeline();
     keys.forEach(k => pipeline.get(k));
     const allStats = await pipeline.exec() as UserStats[];
