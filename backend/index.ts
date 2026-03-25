@@ -18,6 +18,7 @@ import { generateGeminiRoast } from './services/gemini';
 import { generateGroqRoast } from './services/groq';
 import { checkRateLimit, incrementRateLimit } from './services/rateLimiter';
 import { getCachedResult, setCachedResult } from './services/cache';
+import { trackEvent, getMetrics } from './services/analytics';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -175,6 +176,22 @@ apiRouter.get('/results', (req: Request, res: Response): any => {
   const result = getCachedResult(url as string);
   if (!result) return res.status(404).json({ error: 'Not found' });
   res.json(result);
+});
+
+// Phase 2: Analytics
+apiRouter.post('/track', (req: Request, res: Response): any => {
+  const { userId, event } = req.body;
+  if (!userId || !event) return res.status(400).json({ error: 'Missing userId or event' });
+  
+  // Track asynchronously (no-await)
+  trackEvent(userId, event as "roast" | "share").catch((err: any) => console.error('[Analytics] Async track error:', err));
+  
+  res.status(202).json({ status: 'Tracking queued' });
+});
+
+apiRouter.get('/metrics', async (req: Request, res: Response): Promise<any> => {
+  const metrics = await getMetrics();
+  res.json(metrics);
 });
 
 app.use('/api', apiRouter);
