@@ -35,9 +35,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     console.warn("Metadata fetch failed, using defaults.");
   }
 
-  // Use absolute URL for OG image to ensure bots can see it
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://roastmyweb.site";
-  const ogImageUrl = `${siteUrl}/api/og?score=${score}&url=${encodeURIComponent(urlParams)}&punchline=${encodeURIComponent(punchline)}`;
+  const ogImageUrl = `/api/og?score=${score}&url=${encodeURIComponent(urlParams)}&punchline=${encodeURIComponent(punchline)}`;
 
   return {
     title: `Roast of ${urlParams} | Roast My Website`,

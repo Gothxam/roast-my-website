@@ -3,7 +3,7 @@ interface RateLimitData {
   lastReset: number;
 }
 
-const LIMIT = 5;
+const LIMIT = 3;
 const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const store = new Map<string, RateLimitData>();
