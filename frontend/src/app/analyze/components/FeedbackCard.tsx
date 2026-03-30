@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, CheckCircle2, MessageSquare, Flame } from "lucide-react";
 
 interface FeedbackCardProps {
-  url: string;
+  url?: string;
 }
 
 const ratings = [
@@ -16,7 +16,7 @@ const ratings = [
 
 const glass = "bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px]";
 
-export default function FeedbackCard({ url }: FeedbackCardProps) {
+export default function FeedbackCard({ url = "Homepage" }: FeedbackCardProps) {
   const [rating, setRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);

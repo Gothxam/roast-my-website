@@ -9,6 +9,7 @@ import AudienceSection from "@/components/home/AudienceSection";
 import StakesSection from "@/components/home/StakesSection";
 import FAQSection from "@/components/home/FAQSection";
 import CTASection from "@/components/home/CTASection";
+import FeedbackCard from "@/app/analyze/components/FeedbackCard";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -30,6 +31,11 @@ export default function Home() {
         <StakesSection />
         <FAQSection />
         <CTASection onScrollToForm={scrollToForm} />
+        
+        <div className="max-w-4xl mx-auto px-4 py-20">
+          <FeedbackCard url="Homepage Feedback" />
+        </div>
+
         <Footer />
       </div>
     </main>
