@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Script from "next/script";
 import PageLoader from "@/components/PageLoader";
 import UserTracker from "@/components/UserTracker";
+import { Analytics } from "@vercel/analytics/next";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXXXXX";
 
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           `}
         </Script>
         <UserTracker />
+        <Analytics />
 
         <PageLoader />
         <ThreeBackground />
