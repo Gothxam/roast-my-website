@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Flame, Sparkles, Lock, CheckCircle2 } from "lucide-react";
+import FeedbackCard from "@/app/analyze/components/FeedbackCard";
 
 interface HeroSectionProps {
   formRef: React.RefObject<HTMLFormElement | null>;
@@ -102,6 +103,8 @@ export default function HeroSection({ formRef }: HeroSectionProps) {
           </span>
         ))}
       </motion.div>
+      <FeedbackCard url={url!} />
+
     </section>
   );
 }

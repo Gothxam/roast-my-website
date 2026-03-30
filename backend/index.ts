@@ -19,6 +19,7 @@ import { generateGroqRoast } from './services/groq';
 import { checkRateLimit, incrementRateLimit } from './services/rateLimiter';
 import { getCachedResult, setCachedResult } from './services/cache';
 import { trackEvent, getMetrics } from './services/analytics';
+import { submitFeedback } from './services/feedback';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -192,6 +193,22 @@ apiRouter.post('/track', (req: Request, res: Response): any => {
 apiRouter.get('/metrics', async (req: Request, res: Response): Promise<any> => {
   const metrics = await getMetrics();
   res.json(metrics);
+});
+
+apiRouter.post('/feedback', async (req: Request, res: Response): Promise<any> => {
+  const { userId, url, rating, comment } = req.body;
+  if (!userId || !url || !rating) return res.status(400).json({ error: 'Missing required fields' });
+
+  const feedbackData = {
+    userId,
+    url,
+    rating: Number(rating),
+    comment: String(comment || ''),
+    timestamp: Date.now(),
+  };
+
+  await submitFeedback(feedbackData);
+  res.status(201).json({ status: 'Feedback stored' });
 });
 
 app.use('/api', apiRouter);
