@@ -16,6 +16,10 @@ import { fetchPageMetadata } from './services/puppeteer';
 import { generateRoast } from './services/openai';
 import { generateGeminiRoast } from './services/gemini';
 import { generateGroqRoast } from './services/groq';
+import { checkRateLimit, incrementRateLimit } from './services/rateLimiter';
+import { getCachedResult, setCachedResult } from './services/cache';
+import { trackEvent, getMetrics } from './services/analytics';
+import { submitFeedback } from './services/feedback';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -91,6 +95,29 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
   }
 
   try {
+    // Phase 1: Rate Limiting
+    const forwarded = req.headers['x-forwarded-for'] as string;
+    const realIp = req.headers['x-real-ip'] as string;
+    const cfIp = req.headers['cf-connecting-ip'] as string;
+    
+    const ip = forwarded?.split(',')[0].trim() || realIp || cfIp || req.socket.remoteAddress || 'unknown';
+    console.log(`[RateLimit] Detected IP: ${ip} | User-Agent: ${req.headers['user-agent']?.slice(0, 50)}`);
+    
+    const { allowed, remaining } = checkRateLimit(ip);
+    if (!allowed) {
+      return res.status(429).json({ 
+        error: 'Too many roasts today. Come back tomorrow 🔥',
+        details: 'Daily limit reached for this IP.'
+      });
+    }
+
+    // Phase 1: Caching
+    const cached = getCachedResult(url);
+    if (cached) {
+      console.log(`[Cache] Serving cached result for ${url}`);
+      return res.json(cached);
+    }
+
     // Step 1: Scrape rich page data
     console.log(`[1/3] Fetching metadata for ${url}...`);
     const metadata = await fetchPageMetadata(url);
@@ -127,7 +154,13 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
       }
     }
 
-    res.json({ url, metadata, scores, roast: roastData });
+    const result = { url, metadata, scores, roast: roastData };
+
+    // Update Rate Limit and Cache
+    incrementRateLimit(ip);
+    setCachedResult(url, result);
+
+    res.json(result);
 
   } catch (error: any) {
     console.error('Error in /analyze route:', error);
@@ -136,6 +169,46 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<any> => 
       details: error.message,
     });
   }
+});
+
+apiRouter.get('/results', (req: Request, res: Response): any => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL required' });
+  const result = getCachedResult(url as string);
+  if (!result) return res.status(404).json({ error: 'Not found' });
+  res.json(result);
+});
+
+// Phase 2: Analytics
+apiRouter.post('/track', (req: Request, res: Response): any => {
+  const { userId, event } = req.body;
+  if (!userId || !event) return res.status(400).json({ error: 'Missing userId or event' });
+  
+  // Track asynchronously (no-await)
+  trackEvent(userId, event as "roast" | "share").catch((err: any) => console.error('[Analytics] Async track error:', err));
+  
+  res.status(202).json({ status: 'Tracking queued' });
+});
+
+apiRouter.get('/metrics', async (req: Request, res: Response): Promise<any> => {
+  const metrics = await getMetrics();
+  res.json(metrics);
+});
+
+apiRouter.post('/feedback', async (req: Request, res: Response): Promise<any> => {
+  const { userId, url, rating, comment } = req.body;
+  if (!userId || !url || !rating) return res.status(400).json({ error: 'Missing required fields' });
+
+  const feedbackData = {
+    userId,
+    url,
+    rating: Number(rating),
+    comment: String(comment || ''),
+    timestamp: Date.now(),
+  };
+
+  await submitFeedback(feedbackData);
+  res.status(201).json({ status: 'Feedback stored' });
 });
 
 app.use('/api', apiRouter);

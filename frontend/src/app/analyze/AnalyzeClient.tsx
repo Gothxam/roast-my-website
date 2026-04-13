@@ -11,6 +11,8 @@ import RoastCard from "./components/RoastCard";
 import SuggestionsCard from "./components/SuggestionsCard";
 import HeadingsCard from "./components/HeadingsCard";
 import SidebarStats from "./components/SidebarStats";
+import { trackEvent } from "@/components/UserTracker";
+import FeedbackCard from "./components/FeedbackCard";
 
 const loadingJokes = [
   "Waking up the senior dev...",
@@ -56,6 +58,7 @@ function AnalyzeContent() {
         const data: AnalysisResult = await response.json();
         setResult(data);
         setLoading(false);
+        trackEvent("roast");
 
         if (data.roast.score >= 70) {
           confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
@@ -118,6 +121,7 @@ function AnalyzeContent() {
             <RoastCard result={result} scoreColor={scoreColor} scoreLabel={scoreLabel} />
             <SuggestionsCard suggestions={result.roast.suggestions} />
             <HeadingsCard headings={result.metadata.headings} />
+            <FeedbackCard url={url!} />
           </div>
           <SidebarStats result={result} score={score} scoreColor={scoreColor} scoreLabel={scoreLabel} />
         </div>
