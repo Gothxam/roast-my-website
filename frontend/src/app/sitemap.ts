@@ -1,10 +1,10 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL 
-    ? process.env.NEXT_PUBLIC_SITE_URL 
-    : process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    ? process.env.NEXT_PUBLIC_SITE_URL
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
       : "https://roastmywebsite.ai"; // Fallback to production domain
 
   return [
@@ -15,25 +15,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${siteUrl}/analyze`,
+      url: `${siteUrl}analyze`,
       lastModified: new Date(),
       changeFrequency: "always",
       priority: 0.9,
     },
     {
-      url: `${siteUrl}/how-it-works`,
+      url: `${siteUrl}how-it-works`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: `${siteUrl}/glossary`,
+      url: `${siteUrl}glossary`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
     },
     {
-      url: `${siteUrl}/about`,
+      url: `${siteUrl}about`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.5,
