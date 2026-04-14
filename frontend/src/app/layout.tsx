@@ -6,6 +6,7 @@ import ThreeBackground from "@/components/ThreeBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Script from "next/script";
+import StructuredData from "@/components/StructuredData";
 import PageLoader from "@/components/PageLoader";
 import UserTracker from "@/components/UserTracker";
 import { Analytics } from "@vercel/analytics/next";
@@ -23,19 +24,38 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Roast My Website | Brutal AI Website Audits",
-  description: "Get a brutal, honest, and actionable AI review of your website's design, performance, and SEO. Prepare to be roasted by a senior frontend dev.",
-  keywords: ["website roast", "AI website auditor", "lighthouse score", "frontend developer roast", "website feedback", "UX review"],
+  title: {
+    default: "Roast My Website | Brutal AI Website Audits",
+    template: "%s | Roast My Website"
+  },
+  description: "Get a brutal, honest, and actionable AI review of your website's design, performance, and SEO. Prepare to be roasted by a senior frontend dev powered by Gemini AI.",
+  keywords: [
+    "website roast", "AI website auditor", "lighthouse score", "frontend developer roast", 
+    "website feedback", "UX review", "AI SEO audit", "website design feedback", 
+    "performance checker", "web development audit", "Gemini AI", "brutal audit"
+  ],
+  alternates: {
+    canonical: "./"
+  },
   openGraph: {
-    title: "Roast My Website",
+    title: "Roast My Website | Brutal AI Website Audits",
     description: "The brutal truth about your website. AI-powered audits for design, performance, and SEO.",
     type: "website",
     locale: "en_US",
+    images: [
+      {
+        url: "/roast-preview.png",
+        width: 1200,
+        height: 630,
+        alt: "Roast My Website Preview"
+      }
+    ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Roast My Website",
+    title: "Roast My Website | Brutal AI Website Audits",
     description: "Prepare to be roasted by a senior frontend dev AI. Free Lighthouse and UX audits.",
+    images: ["/roast-preview.png"]
   }
 };
 
@@ -44,6 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white selection:bg-purple-500/30`}>
         {/* Analytics & Tracking */}
+        <StructuredData />
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"

@@ -3,8 +3,11 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Glossary | Roast My Website",
-  description: "Understand the terminology used in website auditing — from Lighthouse scores to meta descriptions and Core Web Vitals.",
+  title: "Glossary",
+  description: "Understand the terminology used in website auditing — from Gemini AI and Lighthouse scores to meta descriptions and Core Web Vitals.",
+  alternates: {
+    canonical: "/glossary"
+  }
 };
 
 const glass = "bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl";

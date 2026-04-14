@@ -11,8 +11,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
   if (!urlParams) {
     return {
-      title: "Analyze | Roast My Website",
+      title: "Analyze",
       description: "Get a brutal AI roast of your website.",
+      alternates: {
+        canonical: "/analyze"
+      }
     };
   }
 
@@ -58,6 +61,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       description: punchline,
       images: [ogImageUrl],
     },
+    alternates: {
+      canonical: `/analyze?url=${encodeURIComponent(urlParams)}`
+    }
   };
 }
 

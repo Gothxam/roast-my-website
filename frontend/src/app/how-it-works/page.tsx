@@ -3,8 +3,11 @@ import Link from "next/link";
 import { ArrowLeft, Globe, Braces, Cpu, BarChart, MessageSquare } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "How It Works | Roast My Website",
-  description: "Learn how Roast My Website uses real browser scraping, Lighthouse auditing, and AI to generate honest website feedback.",
+  title: "How It Works",
+  description: "Learn how we use real browser scraping, Google Lighthouse, and Gemini AI to generate brutal, data-driven website audits.",
+  alternates: {
+    canonical: "/how-it-works"
+  }
 };
 
 const glass = "bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl";

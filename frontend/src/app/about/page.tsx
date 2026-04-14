@@ -3,8 +3,11 @@ import Link from "next/link";
 import { ArrowLeft, Flame, Cpu, Globe, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About | Roast My Website",
-  description: "Learn about the AI-powered website roasting tool that gives you brutal, honest feedback about your website's design, SEO, and performance.",
+  title: "About",
+  description: "Learn about the AI-powered website roasting tool. Discover how we use Gemini AI to provide brutal, honest feedback to help developers improve their site's design and SEO.",
+  alternates: {
+    canonical: "/about"
+  }
 };
 
 const glass = "bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl";
